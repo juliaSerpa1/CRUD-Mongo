@@ -13,6 +13,7 @@ router.post("/", async (req,res)=>{
 
     if(!name){
         res.status(422).json({ error: "O nome é obrigatorio!" })
+        return
     }
 
     try{ 
@@ -36,19 +37,77 @@ router.get("/", async (req,res)=>{
 })
 
 router.get("/:id", async (req, res)=>{
+    // console.log(req)
+
     const id = req.params.id
 
     try{
         
         const person = await Person.findOne({ _id: id })
 
+        if(!person){
+            res.status(422).json({ message: "O usuario não foi encontrado!"})
+            return
+        }
+
         res.status(200).json(person)
 
     }catch(error){
-        res.status(500).json({ error: error})
+        res.status(500).json({ error: error })
     }
 
 
+})
+
+router.patch("/:id", async (req,res)=>{
+    const id = req.params.id
+
+    const { name, salary, approved } = req.body
+
+    const person = {
+        name,
+        salary,
+        approved,
+    }
+
+    try{
+
+        const updatePerson = await Person.updateOne({ _id: id, person})
+
+        console.log(updatePerson)
+
+        if(updatePerson.matchedCount === 0){
+            res.status(422).json({ message: "O usuario não foi encontrado!"})
+            return
+        }
+
+        res.status(200).json(person)
+    }catch(error){
+        res.status(500).json({ error: error })
+    }
+})
+
+router.delete("/:id", async (req,res)=>{
+
+    const id = req.params.id
+
+    const person = await Person.findOne({ _id: id })
+
+    if(!person){
+        res.status(422).json({ message: "O usuario não foi encontrado!"})
+        return
+    }    
+
+    try{
+
+        await Person.deleteOne({ _id:id })
+
+        res.status(200).json({message:"Usuario excluido com sucesso"})
+
+
+    }catch(error){
+        res.status(500).json({ error: error })
+    }
 })
 
 module.exports = router;
